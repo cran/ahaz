@@ -1,4 +1,4 @@
-ahaz.adjust<-function(surv,X,weights,standardize=TRUE,idx,method=c("coef","z","crit"))
+"ahaz.adjust"<-function(surv,X,weights,idx,method=c("coef","z","crit"))
   {
     ## Purpose: Fast calculation of univariate measures of association for columns in X,
     ##          adjusted for covariates specified in 'idx'
@@ -7,7 +7,6 @@ ahaz.adjust<-function(surv,X,weights,standardize=TRUE,idx,method=c("coef","z","c
     ##   surv       : Surv object (right censored/counting process)
     ##   X          : Numeric matrix of covariates
     ##   weights    : Weight vector (nonnegative)
-    ##   standardize: Standardize X?
     ##   idx        : Which columns to adjust for?
     ##   method     : Adjustment method
     ## ----------------------------------------------------------------------
@@ -20,19 +19,12 @@ ahaz.adjust<-function(surv,X,weights,standardize=TRUE,idx,method=c("coef","z","c
        stop("'idx' incorrectly specified")
      idx<-as.integer(idx)
      
-     ipr<-function(x,B = NULL)
-       {
-         if(is.null(B))
-           return(apply(x * x, 2, sum))
-         else
-           return(apply(x * (B %*% x), 2, sum))
-       }
-     
      idx <- sort(idx)
+
      if(method == "z")
        {
          # Partial solutions for covariates in 'idx
-         m<-ahaz.partial(surv, X, weights, standardize = standardize, idx = idx)
+         m<-ahaz.partial(surv, X, weights, idx = idx)
          Dbig<-m$D
          Bbig<-m$B
 
@@ -41,9 +33,10 @@ ahaz.adjust<-function(surv,X,weights,standardize=TRUE,idx,method=c("coef","z","c
          Dorig<-Dbig[,idx]
 
          # Univariate results
-         muni<-ahaz(surv,X, weights, standardize=standardize,univariate=TRUE)
+         muni<-ahaz(surv,X, weights, univariate=TRUE)
          d<-muni$d
          D<-muni$D
+       
          
          iA<-solve(Dorig)
          n<-ncol(iA)
@@ -52,13 +45,14 @@ ahaz.adjust<-function(surv,X,weights,standardize=TRUE,idx,method=c("coef","z","c
          x1<--ik*t(vf)
          nomin<-x1%*%d[idx]+ik*d
 
-         denomin<-(ik^2*muni$B+2*ik*apply(Bbig*t(x1),2,sum)+ipr(t(x1),Borig))/nrow(X)
+         denomin<-ik^2*muni$B+2*ik*apply(Bbig*t(x1),2,sum)+apply(t(x1) * (Borig%*%t(x1)), 2, sum)
          denomin[idx]<-NA
          nomin[idx]<-NA
          adj<-nomin/sqrt(denomin)
+          # return(adj)
        } else  {
-         m1<-ahaz.partial(surv,X,weights,  standardize=standardize,idx=idx)
-         m3<-ahaz(surv,X,weights, standardize=standardize,univariate=TRUE)
+         m1<-ahaz.partial(surv=surv,X=X,weights=weights, idx=idx)
+         m3<-ahaz(surv=surv,X=X,weights=weights, univariate=TRUE)
          
          DD<-m1$D
          iA<-solve(DD[,idx])

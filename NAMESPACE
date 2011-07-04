@@ -1,5 +1,6 @@
 useDynLib("ahaz")
 import("survival")
+import("Matrix")
 
 export(ahaz,ahazpen,tune.ahazpen,ahazisis,
        ahaz.adjust,ahaz.partial,lasso.control,
@@ -7,9 +8,9 @@ export(ahaz,ahazpen,tune.ahazpen,ahazisis,
 
 S3method(`[`, "ahazpen")
 S3method("plot","ahaz")
-S3method("plot","ahaz")
 S3method("predict","ahaz")
 S3method("coef","ahaz")
+S3method("vcov","ahaz")
 S3method("residuals","ahaz")
 S3method("summary","ahaz")
 S3method("print","summary.ahaz")
@@ -20,4 +21,6 @@ S3method("predict","ahazpen")
 S3method("coef","ahazpen")
 S3method("plot","tune.ahazpen")
 S3method("print","tune.ahazpen")
+S3method("predict","tune.ahazpen")
+S3method("coef","tune.ahazpen")
 S3method("plot","cumahaz")

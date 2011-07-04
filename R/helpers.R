@@ -1,53 +1,12 @@
-"ahaz.ginv"<-function(X)
+"ahaz.readold" <- function(surv, X, weights)
   {
-    # Strongly inspired by the MASS implementation ginv
-    svd<-svd(X)
-    pos<-svd$d>sqrt(.Machine$double.eps)
-    if(all(pos))
-      return(svd$v%*%((1/svd$d)*t(svd$u)))
-    else
-      return(svd$v[,pos]%*%((1/svd$d[pos])*t(svd$u[,pos])))
-  }
-
-
-"ahaz.scale" <- function(X, weights)
-  {
-    ## Purpose: Faster (weighted) rescaling of covariates
-    ## ----------------------------------------------------------------------
-    ## Arguments:
-    ##   x      : Data matrix (rows = observations)
-    ##   weights: Observation weights
-    ## ---------------------------------------------------------------------
-    ## Author: Anders Gorst-Rasmussen
-    
-    X <- as.matrix(X)
-    n <- nrow(X)
-    p <- ncol(X)
-    if (missing(weights)) {weights <- rep(1, n)}
-    weights <- weights / sum(weights)
-
-    a <- .C("scale",
-             X       = as.double(t(X)),
-             weights = as.double(weights),
-             n       = as.integer(n),
-             p       = as.integer(p),
-             mn      = numeric(p),
-             sd      = numeric(p))
-    
-    out <- list("X" = t(matrix(a$X, nrow = p)), "sd" = a$sd, "mn" = a$mn)
-    return(out)
-  }
-
-"ahaz.read" <- function(surv, X, weights, standardize = TRUE)
-  {
-    ## Purpose: Function for reading survival data/covariates;
+    ## Purpose: (Old) function for reading survival data/covariates;
     ##          checks validity, format 
     ## ----------------------------------------------------------------------
     ## Arguments:
     ##   surv       : Surv object (right censored/counting process)
     ##   X          : Design matrix
     ##   weights    : Weight vector (nonnegative)
-    ##   standardize: Standardize X?
     ## ----------------------------------------------------------------------
     ## Author: Anders Gorst-Rasmussen
     
@@ -68,6 +27,7 @@
         stop("Negative weights or too few nonzero weights")
       weightsum <-sum(weights)
       weights   <- weights / weightsum
+      
     }
     if (attr(surv,"type") != "right" && attr(surv,"type") != "counting")
       stop("Only right-censored or counting process data supported")
@@ -88,14 +48,6 @@
       surv <- surv[weights > 0,]
       weights <- weights[weights > 0]
     }
-        #return(dim(X))
-    # Standardize?
-    if (standardize) {
-      tmp <- ahaz.scale(X, weights)
-      X <- tmp$X
-      std <- list("standardize" = TRUE, "mean"=tmp$mn,"sd" = tmp$sd)
-    } else {std <- list("standardize" = FALSE)}
-
 
    # Left truncation requires two copies of X
     if (right) {
@@ -127,33 +79,75 @@
     out <- list("X" = t(X), "times" = times,"tatrisk"=tatrisk, "tdiff" = tdiff,
                 "death.yn" = death.yn, "ix" = ix, "surv" = surv,
                 "inout" = inout, "wgt" = wgt,"iatrisk" = iatrisk, "nobs" = nobs,
-                "nvars" = nvars, "standardize" = std,
-                "weights" = weights, "weightsum"=weightsum,"right" = right, "colnames" = names)    
+                "nvars" = nvars, "weights" = weights*weightsum, "weightsum"=weightsum,
+                "right" = right, "colnames" = names)    
     return(out)
   }
 
 
-
-"ahaz.cvfolds" <- function (n, folds = 10)
+"ahaz.readnew" <- function(surv, X, weights, standardize = TRUE)
   {
-    ## Purpose: Return list of folds for cross validation
+    ## Purpose: Function for reading survival data/covariates;
+    ##          checks validity, format 
     ## ----------------------------------------------------------------------
     ## Arguments:
-    ##   n    : number of observations
-    ##   folds: number of folds
+    ##   surv       : Surv object (right censored/counting process)
+    ##   X          : Design matrix
+    ##   weights    : Weight vector (nonnegative)
+    ##   standardize: Standardize X?
     ## ----------------------------------------------------------------------
     ## Author: Anders Gorst-Rasmussen
     
-    return(split(sample(1:n), rep(1:folds, length = n)))
-  }
+    # Validity checks/coercions
+    X<-as.matrix(X)
+    if (!class(surv) == "Surv") stop("First argument must be a Surv object")
+    if (!is.numeric(X)) stop("X must be a numeric matrix")
+    if (nrow(surv) != nrow(X)) stop("Survival times/covariates have incorrect dimensions")
+    if (nrow(surv) < 2) stop("too few observations")
+    if (missing(weights)){
+      weights <- rep(1, nrow(X))
+    }
+    else {
+      if (length(weights) != nrow(surv))
+        stop("Weights have incorrect dimension")
+      if (sum(weights != 0) < 2 || any(weights < 0))
+        stop("Negative weights or too few nonzero weights")
+    }
+    if (attr(surv,"type") != "right" && attr(surv,"type") != "counting")
+      stop("Only right-censored or counting process data supported")
+    if (any(duplicated(surv[surv[,ncol(surv)] == 1, ncol(surv)-1])))
+        stop("Tied survival times not supported - break ties manually first")   
+    if(attr(surv,"type") == "right"){right <- TRUE} else{right <- FALSE}
 
-findmaxl<-function(initsol,s,a)
-  {
-    findmaxlam <- function(wux,a) 
-      return(ifelse(wux[1]>=wux[2], wux[1], wux[1]+(wux[2]-wux[1])/a))
-    temp.all.lambda<-apply(cbind(abs(s),abs(initsol)),1,function(x){findmaxlam(x,a)})
-    lambda<-max(temp.all.lambda)
-    return(lambda)
+    # Number of observations/covariates
+    nobs  <- as.integer(sum(weights>0))  
+    nvars <- as.integer(ncol(X)) 
+
+    # Variable names
+    names <- colnames(X)
+    
+    # If any zero weights, remove these observations
+    if (any(weights == 0)) {
+      X <- rbind(X[weights > 0,])
+      surv <- surv[weights > 0,]
+      weights <- weights[weights > 0]
+    }
+
+    # Handle counting process data...
+    
+    # Copying X is an ugly and slow solution. Find a
+    # suitable C-data structure instead.
+    if(right){
+      time1<-rep(0,nobs); time2<-surv[,1]; event<-surv[,2]
+     } else {
+      time1<-surv[,1]; time2<-surv[,2]; event<-surv[,3]; X<-rbind(X,X);
+      weights<-rep(weights,2);
+    }
+    
+    out<-list("X"=X,"time1"=time1,"time2"=time2,"event"=event,"surv"=surv,
+                "weights"=weights,"standardize"=standardize,"colnames"=names,
+              "nobs"=nobs,"nvars"=nvars,"rightcens"=right)
+    return(out)
   }
 
 
@@ -190,10 +184,10 @@ findmaxl<-function(initsol,s,a)
     
     bres <- a$bres
     zbar <- matrix(a$zbar, ncol=length(x$tdiff),nrow = x$nvars)
-    
+ 
     if (type == "cumhaz") {
       if(x$right)
-        out <- list("times" = rev(x$times),"event"=rev(x$death.yn), "cumhaz" = cumsum(rev(bres)))
+        out <- list("times" = rev(x$times),"event"=rev(x$death.yn), "cumhaz" = c(0,cumsum(rev(bres))),"br"=rev(bres))
       else
         out <- list("times" = rev(x$times)[-1],"event"=rev(x$death.yn)[-1], "cumhaz" = cumsum(rev(bres)))
 
@@ -222,9 +216,10 @@ findmaxl<-function(initsol,s,a)
                 ntimes  = as.integer(length(x$tdiff)+1),
                 p       = as.integer(x$nvars),
                 nobs    = as.integer(x$nobs),
-                resid   = as.double(matrix(0,nrow=x$nvars,ncol=x$nobs)))
+                resid   = as.double(matrix(0,nrow=x$nvars,ncol=x$nobs)),
+                wgt     = as.double(x$weights))
         
-        out<- t(matrix(b$resid, nrow = x$nvars,ncol = x$nobs)/sqrt(x$nobs))
+        out<- t(matrix(b$resid, nrow = x$nvars,ncol = x$nobs))
         if(!is.null(colnames) && length(colnames) == x$nvars)
           colnames(out) <-colnames
         
@@ -232,47 +227,73 @@ findmaxl<-function(initsol,s,a)
       }
   }
 
-"ahaz.makelambda"<-function(lambda, s, lambda.min, nlambda,penalty.factor, initsol,penalty, extra = 10)
+"ahaz.linterp" <- function(lambda,s)
 {
-  ## Purpose: Calculate lambda sequence for ahazpen function
-  ## ----------------------------------------------------------------------
-  ## Arguments:
-  ##   lambda    : Optional lambda vector 
-  ##   s         : s vector 
-  ##   lambda.min: Minimum lambda value
-  ##   nlambda   : length of desired lambda vector
-  ##   alpha     : L2 penalization parameter
-  ##   extra     : Force minimal lambda to product no nonzero parameters
-  ##               (for numerical stability) - do this
-  ##               by extending lambda grid by 'extra' values
-  ##               
-  ## ----------------------------------------------------------------------
-  ## Author: Anders Gorst-Rasmussen
-                                       
-   # Maximal lambda
-  if(penalty$type=="lasso" || all(abs(initsol)<.Machine$double.eps)) {
-    maxl <- max(abs(s) / ifelse(penalty.factor==0,1,penalty.factor)) / penalty$alpha
-  } else {
-    maxl <-findmaxl(initsol,s,penalty$a)
+  ## Purpose: Interpolation for lambda sequences
+  ## ---------------------------------------------------------------------
+  ## This is the function 'lambda.interp' from  package
+  ## 'glmnet' version 1.6, Jerome Friedman, Trevor Hastie, Rob Tibshirani.
+  
+  if(length(lambda)==1){# degenerate case of only one lambda
+    nums=length(s)
+    left=rep(1,nums)
+    right=left
+    sfrac=rep(1,nums)
   }
-  # No lambda sequence? Use exponentially decreasing to lambda.min * maxl
-  if (missing(lambda)) {
-    minl <- lambda.min * maxl
-    lambda <- exp(seq(log(maxl), log(minl), length = nlambda))
-    return(list("lambda" = lambda,"keep" = 1:nlambda))
-  } else {
-    
-  # User-specified lambda sequence? Force 'cold start', flag user-specified lambdas
-    lambda <- sort(lambda, decreasing = TRUE)
-    nlambda <- length(lambda)
-    if(max(lambda) < maxl)
-      {
-        lambda <- c(exp(seq(log(maxl), log(max(lambda)), length = extra)), lambda[-1])
-        return(list("lambda" = lambda,"keep" = extra:length(lambda)))
-      }
-    return(list("lambda" = lambda,"keep" = 1:nlambda))
+  else{
+      s[s > max(lambda)] = max(lambda)
+      s[s < min(lambda)] = min(lambda)
+      k=length(lambda)
+      sfrac <- (lambda[1]-s)/(lambda[1] - lambda[k])
+      lambda <- (lambda[1] - lambda)/(lambda[1] - lambda[k])
+      coord <- approx(lambda, seq(lambda), sfrac)$y
+      left <- floor(coord)
+      right <- ceiling(coord)
+      sfrac=(sfrac-lambda[right])/(lambda[left] - lambda[right])
+      sfrac[left==right]=1
+    }
+  return(list(left=left,right=right,frac=sfrac))
+}
+
+
+"ahaz.nzcoef" <- function(beta,bystep=FALSE){
+
+  ## Purpose: Get nonzero part of a dgCMatrix
+  ## ---------------------------------------------------------------------
+  ## This is the function 'nzcoef' from package 'glmnet' version 1.6
+  ## Jerome Friedman, Trevor Hastie, Rob Tibshirani.
+  
+  if(nrow(beta)==1){#degenerate case
+    if(bystep)
+      return(apply(beta,2,function(x)if(abs(x)>0)1 else NULL))
+    else {if(any(abs(beta)>0))1 else NULL}
+  }
+  else{
+    beta<-t(beta)
+    which<-diff(beta@p)
+    which<-seq(which)[which>0]
+    if(bystep){
+      nzel<-function(x,which)if(any(x))which[x]else NULL
+      beta<-abs(as.matrix(beta[,which]))>0
+      return(apply(beta,1,nzel,which))
+    }
+    else
+      return(which)
   }
 }
+
+"ahaz.cvfolds" <- function (n, folds = 10)
+  {
+    ## Purpose: Return list of folds for cross validation
+    ## ----------------------------------------------------------------------
+    ## Arguments:
+    ##   n    : number of observations
+    ##   folds: number of folds
+    ## ----------------------------------------------------------------------
+    ## Author: Anders Gorst-Rasmussen
+    
+    return(split(sample(1:n), rep(1:folds, length = n)))
+  }
 
 "error.bars" <- function(x, upper, lower, width = 0.01, ...)
 {
@@ -291,5 +312,29 @@ findmaxl<-function(initsol,s,a)
   segments(x, upper, x, lower, ...)
 }
 
+"ahaz.ginv"<-function(X)
+  {
+    ## Purpose: Generalized matrix inverse
+    ## ----------------------------------------------------------------------
+    ## Strongly inspired by the MASS implementation ginv
+    svd<-svd(X)
+    pos<-svd$d>sqrt(.Machine$double.eps)
+    if(all(pos))
+      return(svd$v%*%((1/svd$d)*t(svd$u)))
+    else
+      return(svd$v[,pos]%*%((1/svd$d[pos])*t(svd$u[,pos])))
+  }
 
-
+"ahaz.mse"<-function(x, beta)
+  {
+    ## Purpose: MSE from ahaz object and given beta
+    ## ----------------------------------------------------------------------
+    ## Arguments:
+    ##   x     : 'ahaz' object
+    ##   beta  : beta estimate
+    ## ----------------------------------------------------------------------
+    ## Author: Anders Gorst-Rasmussen
+    if(length(beta)>1)
+      return((t(beta) %*% x$D %*% beta - 2 * t(beta) %*% x$d))
+    return(x$D*beta^2-2*beta*x$d)
+  }

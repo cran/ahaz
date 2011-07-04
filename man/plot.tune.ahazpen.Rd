@@ -4,10 +4,12 @@
 \description{Plot, as a function of the penalty parameter, the curve of tuning scores produced when tuning a
   penalized semiparametric additive hazards model.}
 \usage{
-\method{plot}{tune.ahazpen}(x, \dots)  }
+\method{plot}{tune.ahazpen}(x, df = TRUE, \dots)  }
 
 \arguments{
   \item{x}{The result of a call to \code{tune.ahazpen}.}
+     \item{df}{Display number of nonzero parameters in top margin. Default
+    is \code{df=TRUE}.}
     \item{\dots}{Additional graphical arguments passed to the \code{plot} function.}
   }
 
@@ -32,7 +34,7 @@ X <- as.matrix(sorlie[,3:ncol(sorlie)])
 # Do 10 fold cross-validation
 set.seed(10101)
 tune.fit <- tune.ahazpen(surv, X, penalty="lasso",
-              dfmax=30, tune = cv.control(nfolds=10))
+              dfmax=50, tune = cv.control(nfolds=10))
 plot(tune.fit)
 
 }

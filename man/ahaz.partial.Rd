@@ -1,10 +1,10 @@
 \name{ahaz.partial}
 \alias{ahaz.partial}
-\title{Partial calculation of estimating equations used by ahaz}
+\title{Partial calculation of estimating quantities used by ahaz}
 \description{Partial calculation of the quantities used in the estimating equations for
   ahaz.}
 \usage{
-ahaz.partial(surv, X, weights, standardize = TRUE, idx)
+ahaz.partial(surv, X, weights, idx)
 }
 
 \arguments{
@@ -15,9 +15,6 @@ ahaz.partial(surv, X, weights, standardize = TRUE, idx)
   \item{X}{Design matrix. Missing values are not supported.}
   \item{weights}{Optional vector of observation weights. Default is 1
     for each observation.}
-    \item{standardize}{Logical flag for variable standardization, prior to
-    model fitting. Estimates are always returned on
-    the original scale. Default is \code{standardize=TRUE}.}
     \item{idx}{Vector of indices of covariates to use in the calculations.}
 }
 \details{
@@ -29,8 +26,9 @@ ahaz.partial(surv, X, weights, standardize = TRUE, idx)
   are of the form \eqn{D\beta=d}{D*beta=d} with \eqn{D} a quadratic matrix with
   number of columns equal to the number of covariates. The present
   function returns \code{d[idx]}, \code{D[idx,]}, and \code{B[idx,]};
-  the latter an estimator
-  covariance matrix of \code{d[idx]} (scaled by the number of observations).
+  the latter a matrix such that \eqn{D^{-1} B
+  D^{-1}} estimates the
+  covariance matrix of the regression coefficients.
   }
 \value{
   A list containing the following elements:

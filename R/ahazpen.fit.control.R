@@ -1,4 +1,4 @@
-"ahazpen.fit.control"<-function(thresh=1e-4,maxit=2500,...)
+"ahazpen.fit.control"<-function(thresh=1e-5,maxit=100000,...)
   {
     ## Purpose: (Internal) control function for CCD algorithm;
     ##          to be used only in ahazpen calls

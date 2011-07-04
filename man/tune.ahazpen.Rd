@@ -7,7 +7,7 @@
   }
 \usage{
 tune.ahazpen(surv, X, weights, standardize=TRUE, penalty=lasso.control(),
-             tune=cv.control(), dfmax=nobs-1, lambda, ...)
+             tune=cv.control(), dfmax=nvars, lambda, ...)
 }
 
 \arguments{
@@ -30,7 +30,7 @@ tune.ahazpen(surv, X, weights, standardize=TRUE, penalty=lasso.control(),
       model. Default is \code{nvars=nobs-1}. Unless a complete
   regularization path is needed, it is \strong{highly}
   recommended to initially choose a relatively smaller value of
-  \code{dfmax} to reduce computation time.}
+  \code{dfmax} to reduce computation time and memory usage.}
 \item{lambda}{An optional user supplied sequence of penalty parameters. Typical usage
     is to have the 
     program compute its own \code{lambda} sequence based on
@@ -73,7 +73,7 @@ tune.ahazpen(surv, X, weights, standardize=TRUE, penalty=lasso.control(),
 \references{
 Gorst-Rasmussen, A. & Scheike, T. H. (2011). \emph{Independent screening for
   single-index hazard rate models with ultra-high dimensional features.}
-  Technical report, Department of Mathematical Sciences, Aalborg University.
+  Technical report R-2011-06, Department of Mathematical Sciences, Aalborg University.
 }
 \seealso{\code{\link{ahaz.tune.control}}, \code{\link{plot.tune.ahazpen}}, \code{\link{ahazpen}}.}
 \examples{
@@ -86,35 +86,32 @@ time <- sorlie$time+runif(nrow(sorlie))*1e-2
 # Survival data + covariates
 surv <- Surv(time,sorlie$status)
 X <- as.matrix(sorlie[,3:ncol(sorlie)])
-dfmax<-30
 
 # Training/test data
-set.seed(10101)
+set.seed(20202)
 train <- sample(1:nrow(sorlie),76)
 test <- setdiff(1:nrow(sorlie),train)
 
 # Run cross validation on training data
 set.seed(10101)
-cv.las <- tune.ahazpen(surv[train,], X[train,],dfmax=dfmax)
+cv.las <- tune.ahazpen(surv[train,], X[train,],dfmax=30)
 plot(cv.las)
 
 # Check fit on the test data
-fit.las <- ahazpen(surv[train,],X[train,],lambda=cv.las$lambda.min,dfmax=dfmax)
-testrisk <- predict(fit.las,X[test,],"lp")
+testrisk <- predict(cv.las,X[test,],type="lp")
 plot(survfit(surv[test,]~I(testrisk<median(testrisk))),main="Low versus high risk")
 
 # Advanced example, cross-validation of one-step SCAD
 # with initial solution derived from univariate models.
 # Since init.sol is specified as a function, it is
 # automatically cross-validated as well
-scadfun<-function(surv,X,weights){ahaz(surv,X,univariate=TRUE)$d}
+scadfun<-function(surv,X,weights){coef(ahaz(surv,X,univariate=TRUE))}
+set.seed(10101)
 cv.ssc<-tune.ahazpen(surv[train,],X[train,],
                      penalty=sscad.control(init.sol=scadfun),
-                     tune=cv.control(rep=5),nlambda=300,dfmax=dfmax)
+                     tune=cv.control(rep=5),dfmax=30)
 # Check fit on test data
-fit.ssc <- ahazpen(surv[train,],X[train,],lambda=cv.ssc$lambda.min,
-                   penalty=sscad.control(init.sol=scadfun))
-testrisk <- predict(fit.ssc,X[test,],"lp")
+testrisk <- predict(cv.ssc,X[test,],type="lp")
 plot(survfit(surv[test,]~I(testrisk<median(testrisk))),main="Low versus high risk")
 }
 

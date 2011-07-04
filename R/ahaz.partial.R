@@ -1,4 +1,4 @@
-"ahaz.partial" <- function(surv, X, weights, standardize = TRUE, idx)
+"ahaz.partial" <- function(surv, X, weights, idx)
   {
     ## Purpose: Calculation of columns 'idx' in the matrices D and B used in
     ##          semiparametric additive hazards model
@@ -7,7 +7,6 @@
     ##   surv       : Surv object (right censored/counting process)
     ##   X          : Numeric matrix of covariates
     ##   weights    : Weight vector (nonnegative)
-    ##   standardize: Standardize X?
     ##   idx        : Which columns to calculate?
     ## ----------------------------------------------------------------------
     ## Author: Anders Gorst-Rasmussen
@@ -16,73 +15,36 @@
 
 
     # Internal formatting of data
-    tmp <- ahaz.read(surv=surv, X=X, weights=weights, standardize=standardize)
+    tmp<-ahaz.readnew(surv,X,weights)
 
-                                        # Check and sort 'idx'; make logical array marking columns in 'idx'
+    # Check and sort 'idx'; make logical array marking columns in 'idx'
     if(!is.numeric(idx) || length(idx)<1 || length(idx)>tmp$nvars)
       stop("Incorrect 'idx'")
-    idx<-sort(as.integer(idx))
-    usethis<-rep(-1,tmp$nvars)
-    usethis[idx]<-1
+    ord <- order(as.integer(idx))
+    ix <- as.integer(idx)[ord]
+    usethis <- rep(0,tmp$nvars)
+    usethis[ix] <- 1
+
+    #return(length(ix)*tmp$nvars)
+    a <- .C("aha",
+            "X"=tmp$X,
+            "time1"=as.double(tmp$time1),
+            "time2"=as.double(tmp$time2),
+            "event"=as.integer(tmp$event),
+            "weights"=as.double(tmp$weights),
+            "n"=tmp$nobs,
+            "p"=tmp$nvars,
+            "d"=numeric(length(ix)),
+            "D"=numeric(length(ix)*tmp$nvars),
+            "B"=numeric(length(ix)*tmp$nvars),
+            "getB"=as.integer(1),
+            "univariate"=as.integer(0),
+            "usethis"= as.integer(usethis),
+            "rightcens"=as.integer(tmp$rightcens))
+
+    D <- matrix(a$D[1:(length(idx)*tmp$nvars)],ncol=length(ix))[,order(ord)]
+    B <- matrix(a$B[1:(length(idx)*tmp$nvars)],ncol=length(ix))[,order(ord)]
+    d <- a$d[order(ord)]
     
-    # Call C-routine to calculate matrix elements with index < idx 
-    a <- .C("ah",
-            X       = as.double(tmp$X),
-            inout   = as.double(tmp$inout),
-            tdiff   = as.double(tmp$tdiff),
-            iatrisk = as.double(tmp$iatrisk),
-            deathyn = as.integer(drop(tmp$death.yn)),
-            n       = as.integer(length(tmp$tdiff)),
-            p       = as.integer(tmp$nvars),
-            D       = numeric(length(idx)*tmp$nvars),
-            d       = numeric(tmp$nvars),
-            B       = numeric(length(idx)*tmp$nvars),
-            univar  = as.integer(0),
-            usethis = as.integer(usethis),
-            nuse = as.integer(length(idx)))
-
-    # Call C-routine to calculate maxtrix elements with index > idx
-    b <- .C("ah",
-            X       = as.double(tmp$X[nrow(tmp$X):1,]),
-            inout   = as.double(tmp$inout),
-            tdiff   = as.double(tmp$tdiff),
-            iatrisk = as.double(tmp$iatrisk),
-            deathyn = as.integer(drop(tmp$death.yn)),
-            n       = as.integer(length(tmp$tdiff)),
-            p       = as.integer(tmp$nvars),
-            D       = numeric(length(idx)*tmp$nvars),
-            d       = numeric(tmp$nvars),
-            B       = numeric(length(idx)*tmp$nvars),
-            univar  = as.integer(0),
-            usethis = as.integer(rev(usethis)),
-            nuse = as.integer(length(idx)))
-
-    # Merge partial D and B matrices
-    combmat<-function(x,y,p,idx)
-      {
-        out<-matrix(0,nrow=length(idx),ncol=p)
-        j<-1
-        k<-1
-        x<-x[x!=0]
-        y<-rev(y[y!=0])
-        for(i in 1:length(idx)){
-          out[i,idx[i]:1]<-x[j:(j+idx[i]-1)]
-          out[i,p:idx[i]]<-y[k:(k+p-idx[i])]
-          j<-j+idx[i]
-          k<-k+(p-idx[i])+1
-        }
-        return(out)
-      }
-    D<-as.matrix(combmat(a$D,b$D,tmp$nvars,idx),ncol=length(idx))
-    B<-as.matrix(combmat(a$B,b$B,tmp$nvars,idx),ncol=length(idx))
-    d<-a$d[idx]
-
-    if (standardize)
-      {
-        scale <- tmp$standardize$sd[idx] %*% t(tmp$standardize$sd)
-        D <- D * scale
-        B <- B * scale
-        d <- d * tmp$standardize$sd[idx]
-      }
-    return(list("call"=this.call,"idx"=idx,"nobs"=tmp$nobs,"nvars"=tmp$nvars,"d"=d,"D"=D,"B"=B))
+    return(list("call"=this.call,"idx"=idx,"nobs"=tmp$nobs,"nvars"=tmp$nvars,"d"=d,"D"=t(D),"B"=t(B)))
   }

@@ -5,15 +5,14 @@
   the penalized semiparametric additive hazards model. This is typically
 only used in a call to \code{ahazpen}.}
 \usage{
-ahazpen.fit.control(thresh=1e-4, maxit=2500, \dots)
+ahazpen.fit.control(thresh=1e-5, maxit=100000, \dots)
 }
 \arguments{
   \item{thresh}{Declare convergence when the maximal relative change from the
-    last iteration is less than \code{thresh}. Default is \code{thresh=1e-4}.}
-  \item{maxit}{Maximal number of coordinate descent iterations before the algorithm exits
-    with a warning. Default is \code{maxit=2500}. If very
-    large models are considered or the penalized model is closed to
-    saturated, it may be necessary to increase \code{maxit}.}
+    last iteration is less than \code{thresh}. Default is
+    \code{thresh=1e-5}.}
+  \item{maxit}{Maximal number passes by the algorithm over the data for
+    all values of the regularization parameter lambda. Default is \code{maxit=100000}. }
    \item{\dots}{For future methods.}
 }
 

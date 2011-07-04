@@ -1,23 +1,4 @@
-"ahaz.buildmat" <- function(x, p)
-  {
-    ## Purpose: Symmetric matrix from 1D flipped upper triangle
-    ## ----------------------------------------------------------------------
-    ## Arguments:
-    ##   x: Numeric p*(p+1)/2 vector (backwards rowwise matrix entries)
-    ##   p: Dimension of matrix
-    ## ----------------------------------------------------------------------
-    ## Author: Anders Gorst-Rasmussen
-    
-    f <- function(y) { c(rev(y[y != 0]),y[y == 0]) }
-    M <- matrix(0, nrow = p, ncol = p)
-    M[(!lower.tri(M))] <- x
-    M <- apply(M, 2, f)
-    out<-M + t(upper.tri(M) * M)
-
-    return(out)
-  }
-
-"ahaz" <- function(surv, X, weights, standardize = TRUE, univariate = FALSE, robust=FALSE)
+"ahaz" <- function(surv, X, weights, univariate = FALSE, robust = FALSE)
   {
     ## Purpose: Semiparametric additive hazards regression (Lin & Ying 1994)
     ## ----------------------------------------------------------------------
@@ -25,74 +6,61 @@
     ##   surv       : Surv object (right censored/counting process)
     ##   X          : Numeric matrix of covariates
     ##   weights    : Weight vector (nonnegative)
-    ##   standardize: Standardize X?
     ##   univariate : Do marginal analyses?
     ##   robust     : Setup robust estimation of covariances
     ## ----------------------------------------------------------------------
     ## Author: Anders Gorst-Rasmussen
-
+    
     this.call <- match.call()
 
     if(univariate && robust)
       stop("option 'robust' not supported for univariate regressions")
 
-    # Validity checks/internal formatting
-    tmp <- ahaz.read(surv, X, weights, standardize)
+    tmp<-ahaz.readnew(surv,X,weights)
 
-    # Fit additive hazard model
-    a <- .C("ah",
-            X       = as.double(tmp$X),
-            inout   = as.double(tmp$inout),
-            tdiff   = as.double(tmp$tdiff),
-            iatrisk  = as.double(tmp$iatrisk),
-            deathyn = as.integer(drop(tmp$death.yn)),
-            n       = as.integer(length(tmp$tdiff)),
-            p       = as.integer(tmp$nvars),
-            D       = numeric(ifelse(univariate,tmp$nvars,tmp$nvars*(tmp$nvars+1)/2)),
-            d       = numeric(tmp$nvars),
-            B       = numeric(ifelse(univariate,tmp$nvars,tmp$nvars*(tmp$nvars+1)/2)),
-            univar  = as.integer(univariate),
-            usethis = as.integer(rep(1,tmp$nvars)),
-            nuse = as.integer(ceiling((tmp$nvars+1)/2)))
+    a <- .C("aha",
+            "X"=tmp$X,
+            "time1"=as.double(tmp$time1),
+            "time2"=as.double(tmp$time2),
+            "event"=as.integer(tmp$event),
+            "weights"=as.double(tmp$weights),
+            "n"=tmp$nobs,
+            "p"=tmp$nvars,
+            "d"=numeric(tmp$nvars),
+            "D"=numeric(ifelse(univariate,tmp$nvars,tmp$nvars^2)),
+            "B"=numeric(ifelse(univariate,tmp$nvars,tmp$nvars^2)),
+            "getB"=as.integer(1),
+            "univariate"=as.integer(univariate),
+            "usethis"= as.integer(rep(1,tmp$nvars)),
+            "rightcens"=as.integer(tmp$rightcens))
 
-    # Re-scale estimates if 'standardize=TRUE'
-    if (standardize)
-      {
-        tmp$X <- sweep( tmp$X, 1, tmp$standardize$sd, '*')
-        tmp$X <- sweep( tmp$X, 1, tmp$standardize$mean, '+')
-        if (!univariate) {
-          scale <- tmp$standardize$sd %*% t(tmp$standardize$sd)
-          D <- ahaz.buildmat(a$D, tmp$nvars) * scale
-          B <- ahaz.buildmat(a$B, tmp$nvars) * scale
-          d <- a$d * tmp$standardize$sd
-        } else {
-          D <- a$D * tmp$standardize$sd^2
-          B <- a$B * tmp$standardize$sd^2
-          d <- a$d * tmp$standardize$sd
-        }
-      } else {
-            if (!univariate) {
-              D <- ahaz.buildmat(a$D, tmp$nvars)
-              B <- ahaz.buildmat(a$B, tmp$nvars)
-              d <- a$d
-            } else {
-              D <- a$D
-              B <- a$B
-              d <- a$d
-            }
-          }
+    d<-a$d
+    if(!univariate && tmp$nvars>1) {
+      D<-matrix(a$D,ncol=tmp$nvars)
+      D<-D+t(D)-diag(diag(D))
+      B<-0
+      B<-matrix(a$B,ncol=tmp$nvars)
+      B<-B+t(B)-diag(diag(B))
+    } else {
+      D<-a$D
+      B<-a$B
+    }
     
     names(d)<-tmp$colnames
-    if(!univariate)
+    if(!univariate&& tmp$nvars>1)
       {
         colnames(D)<-rownames(D)<-tmp$colnames
         colnames(B)<-rownames(B)<-tmp$colnames
       } else {
         names(D)<-names(B)<-tmp$colnames
       }
+    
+    # We must carry around a copy of X for prediction purposes
+    data<-list("X"=X,"surv"=surv,"weights"=tmp$weights[1:tmp$nobs],"colnames"=tmp$colnames)
+    
     out <-structure(list("call" = this.call, "nobs" = tmp$nobs, "nvars" = tmp$nvars,
-                "D" = D, "d" = d, "B" = B, "univar" = univariate,
-               "data" = tmp, "robust" = 0), class="ahaz")
+                         "D" = D, "d" = d, "B" = B, "univar" = univariate,
+                         "robust" = 0,"data"=data,"right"=tmp$rightcens), class="ahaz")
 
     # Calculate robust variance estimator?
     if (robust)

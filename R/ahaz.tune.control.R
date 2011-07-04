@@ -42,4 +42,3 @@
       }
     return(list("type"="CV","getfolds"=getfolds,"trace"=trace,"rep"=reps))
   }
-

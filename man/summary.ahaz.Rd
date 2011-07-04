@@ -21,9 +21,7 @@
   regressions (option \code{univariate} in \code{ahaz})?}
 }
 
-\seealso{\code{\link{ahaz}}, \code{\link{plot.ahaz}}.
-
-\code{The function \link[=coef.ahaz]{coef}} extracts regression coefficients only.}
+\seealso{\code{\link{ahaz}}, \code{\link{plot.ahaz}}}
 \examples{
 data(sorlie)
 

@@ -30,18 +30,18 @@
     The Breslow estimator of the baseline cumulative hazard is described
     in Lin & Ying (1994).
 
-    The regression coefficients in the semiparametric additive hazards
+    The regression coefficients \eqn{\beta_0}{beta_0} in the semiparametric additive hazards
     model are obtained as the
-    solution to a quadratic  system of linear equations
-    \eqn{D\beta=d}{D*beta = d}. With \eqn{n} denoting the number of observations, the
+    solution \eqn{\hat{\beta}}{beta} to a quadratic  system of linear equations
+    \eqn{D\beta=d}{D*beta = d}. The
     (integrated) martingale residuals \eqn{\epsilon_i}{epsilon_i} for
     \eqn{i=1,...,n} are vectors, of length
     corresponding to the number of covariates, so that
-    \deqn{D\beta -d \approx \epsilon_1+\cdots+\epsilon_n}{D*beta - d
+    \deqn{D(\hat{\beta}-\beta_0) -d \approx \epsilon_1+\cdots+\epsilon_n}{D*(beta-beta_0) - d
       ~ epsilon_1 + ... + epsilon_n}
     The residuals estimate integrated
 martingales and are
-    asymptotically mean-zero IID multivariate Gaussian. They can be used to derive a sandwich-type variance
+    asymptotically distributed as mean-zero IID multivariate Gaussian. They can be used to derive a sandwich-type variance
     estimator for regression coefficients (implemented in
     \code{summary.ahaz} when \code{robust=TRUE} is specified).  They can moreover be used for implementing consistent standard error
     estimation under clustering; or for implementing resampling-based
@@ -101,10 +101,11 @@ for(i in 1:4){
 }
 
 # Residuals - alternative variance estimation
-resid <- predict(fit, type = "residuals")
+resid <- residuals(fit)
 cov1 <- summary(fit)$coef[,2]
 invD <- solve(fit$D)
-cov2 <- invD \%*\% cov(resid) \%*\% invD
+Best<-t(resid)\%*\%resid
+cov2 <- invD \%*\% Best \%*\% invD
 # Compare with (nonrobust) SEs from 'summary.ahaz'
 plot(cov1, sqrt(diag(cov2)),xlab="Nonrobust",ylab="Robust")
 abline(c(0,1))

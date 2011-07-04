@@ -59,9 +59,9 @@ where \eqn{b} is some
 \deqn{w_\lambda(x)=\lambda I(x \le \lambda) + \frac{(a\lambda
    - x)_+}{a - 1}I(x>\lambda)}{w(lambda, x) = lambda * I(x <= lambda) + I(x > lambda) *
    (a*lambda-x)_+ / (a-1)}
- The scaling factor \eqn{c} essentially controls how different the
+ The scaling factor \eqn{c}  controls how `different' the
  stepwise SCAD penalty is from the standard lasso penalty (and is
-  can be used to remove dependency of the penalty on the scaling of the time
+  also used to remove dependency of the penalty on the scaling of the time
   axis).
 
   The one-step SCAD method of Zou & Li (2008) corresponds to taking
@@ -74,15 +74,14 @@ where \eqn{b} is some
   solution paths can be an issue.
 
   The arguments \code{ada.wgt} and \code{init.sol} can be specified as
-  functions of the observations. This is convenient, for example, in
-  connection cross-validation for tuning parameter selection. Such a
-  function \strong{must} be specified precisely 
-  with the arguments \code{surv}, \code{X} and \code{weights} and \strong{must}
-  output a numeric vector of length corresponding to the number of
-  covariates. \code{ahazpen} will take care of scaling so the function
-  should produce output on the original scale. See the examples
-  here as well as the examples for \code{\link{tune.ahazpen}} for usage
-  of this feature in practice.
+  functions of the observations. This is convenient, for example, when
+  using cross-validation for tuning parameter selection. Such a function
+  \strong{must} be specified precisely with the arguments \code{surv},
+  \code{X} and \code{weights} and \strong{must} output a numeric vector
+  of length corresponding to the number of covariates. \code{ahazpen}
+  will take care of scaling so the function should produce output on the
+  original scale. See the examples here as well as the examples for
+  \code{\link{tune.ahazpen}} for usage of this feature in practice.
   
 }
 
@@ -101,7 +100,7 @@ where \eqn{b} is some
 \references{
    Gorst-Rasmussen, A. & Scheike, T. H. (2011). \emph{Independent screening for
   single-index hazard rate models with ultra-high dimensional features.}
-  Technical report, Department of Mathematical Sciences, Aalborg
+  Technical report R-2011-06, Department of Mathematical Sciences, Aalborg
   University.
   
     Leng, C. & Ma, S. (2007). \emph{Path consistent model selection in
@@ -126,35 +125,25 @@ time <- sorlie$time+runif(nrow(sorlie))*1e-2
 # Survival data + covariates
 surv <- Surv(time,sorlie$status)
 X <- as.matrix(sorlie[,3:ncol(sorlie)])
-dfmax <- 30
 
 # Fit additive hazards regression model with elasticnet penalty
-model <- ahazpen(surv,X,penalty=lasso.control(alpha=0.001),dfmax=dfmax)
+model <- ahazpen(surv,X,penalty=lasso.control(alpha=0.1),dfmax=30)
 plot(model)
 
 # Adaptive lasso with weights 1/|beta_i|^0.5. Note that, although
 # we do not use 'weights', it MUST be included as an argument
 adafun <- function(surv,X,weights)
  return(1/abs(coef(ahaz(surv,X)))^.5)
-model <- ahazpen(surv,X,penalty=lasso.control(ada.wgt=adafun),dfmax=30)
+model <- ahazpen(surv,X[,1:50],penalty=lasso.control(ada.wgt=adafun))
 plot(model)
-
-# An advanced example - "2-step" adaptive lasso, deriving weights
-# from standard lasso with cross-validation
-adafun <- function(surv,X,weights){
- initfit <- tune.ahazpen(surv,X,penalty="lasso", dfmax=dfmax)
- fit <- ahazpen(surv,X,penalty="lasso", lambda=initfit$lambda.min)
- return(1/abs(coef(fit)))
-}
-model.alas <- tune.ahazpen(surv,X,dfmax=dfmax,penalty=lasso.control(ada.wgt=adafun))
-plot(model.alas)
 
 # One-step SCAD with initial solution derived from univariate regressions
 scadfun <- function(surv,X,weights){
  fit <- ahaz(surv,X,univariate=TRUE)
  return(coef(fit))
 }
-model.ssc <- tune.ahazpen(surv,X,dfmax=dfmax,penalty=sscad.control(init.sol=scadfun))
+set.seed(10101)
+model.ssc <- tune.ahazpen(surv,X,dfmax=30,penalty=sscad.control(init.sol=scadfun))
 plot(model.ssc)
 }
 \keyword{misc}

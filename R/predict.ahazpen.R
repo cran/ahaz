@@ -1,4 +1,4 @@
-"predict.ahazpen" <- function(object, newX, type = c("coef","lp","residuals","cumhaz"), index = NULL, ...)
+"predict.ahazpen" <- function(object, newX, type = c("coef","lp","residuals","cumhaz"), lambda = NULL, ...)
   {
     ## Purpose: Prediction for 'ahazpen' object
     ## ----------------------------------------------------------------------
@@ -15,53 +15,53 @@
     ## Author: Anders Gorst-Rasmussen
     
     type <- match.arg(type)
-    if(!is.null(index) && (any(index<1) || !is.null(index) && any(index>length(object$lambda))))
-      stop("argument 'index' out of bounds")
+    if(!is.null(lambda) && any(lambda<min(object$lambda))) {
+      lmin<-format(min(object$lambda),digits=3)
+      warning("argument 'lambda' out of bounds; current range is ",paste("[Inf, ",lmin,"]",sep=""))
+    }
 
-    if (type == "coef") {
-      if(is.null(index))
-        return(object$beta)
-      return(object$beta[index,])
-    } 
+    beta<-object$beta
+    if(!is.null(lambda))
+      {
+        lamlist<-ahaz.linterp(object$lambda,lambda)
+        beta<-beta[,lamlist$left,drop=FALSE]*lamlist$frac +beta[,lamlist$right,drop=FALSE]*(1-lamlist$frac)
+      }
+    if (type == "coef") 
+      return(beta)
     
     if (missing(newX)) stop("no new data provided")
     if (!is.numeric(newX)) stop("argument 'newX' must be a numeric matrix")
     if(dim(newX)[2]!=object$nvars)
       stop("incorrect dimensions of argument 'newX'")
-    if(!is.null(index) && (any(index<1) || !is.null(index) && any(index>length(object$lambda))))
-      stop("argument 'index' out of bounds")
 
     newX<-as.matrix(newX)
     
     if (type=="lp") {
-      if(is.null(index))
-        return(drop(drop(object$beta)%*%t(newX)))
-      return(drop(drop(object$beta)%*%t(newX))[,index])
+      return(drop(newX%*%beta))
 
     }  else {
-        if(is.null(index) && length(object$lambda)>1)
-          stop("missing argument 'index'")
-        if(length(index)>1)
-          stop("argument 'index' must have length 1 for option 'type=\"residuals\"'")
+        if(is.null(lambda) && length(object$lambda)>1)
+          stop("missing argument 'lambda'")
+        if(length(lambda)>1)
+          stop("argument 'lambda' must have length 1 for option 'type=\"residuals\"'")
         if(dim(newX)[1]!=object$nobs)
           stop("incorrect dimensions of argument 'newX'")
-        if(is.null(index) && length(object$lambda)==1)
-          index <- 1
-
-        if(is.matrix(object$beta))
-          beta <- object$beta[index,]
-        else
-          beta <- object$beta
-        include <- (beta!=0)
+        include <- as.logical(beta!=0)
         
         if(!is.null(colnames(newX)))
           names <- colnames(newX)[include]
         else
           names <- which(include)
 
-        if(any(include))
-          return(ahaz.predbackend(ahaz.read(object$surv, newX[,include], standardize = FALSE),
-                                  beta = beta[include], type = type, colnames = names))
-        stop("no variables included!")
+        if(any(include)){
+          return(ahaz.predbackend(ahaz.readold(object$surv, newX[,include]),
+                                  beta = as.numeric(beta)[include], type = type, colnames = names))
+        } else {
+          return(ahaz.predbackend(ahaz.readold(object$surv, rep(0,nrow(newX))),
+                                  beta = 0, type = type, colnames = names[1]))
+        }
       }
   }
+
+"coef.ahazpen"<-function(object,...)
+  return(predict(object,type="coef",...))

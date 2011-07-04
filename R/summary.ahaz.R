@@ -24,17 +24,17 @@
           Dinv[use,use]<-solve(object$D[use, use])
         beta[use]<-Dinv[use, use] %*% object$d[use]
                                             
-        cov <- (Dinv %*% object$B %*% Dinv) / object$data$weightsum
+        cov <- (Dinv %*% object$B %*% Dinv) 
         se <- diag(cov) ^ .5
         if(Dqr$rank==object$nvars)
-          wtest<-drop(object$d %*% solve(object$B) %*%object$d * object$data$weightsum)
+          wtest<-drop(object$d %*% solve(object$B) %*%object$d )
         else
           wtest<-NA
         waldtest<-c("test"=wtest, "pvalue"=1 - pchisq(wtest,df = object$nvars),"df"=object$nvars)
       }
     else{
       beta<- object$d/object$D
-      cov <- object$B / object$D^2 / object$data$weightsum
+      cov <- object$B / object$D^2 
       se <- cov^.5
       waldtest<-NULL
     }

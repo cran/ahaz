@@ -4,8 +4,7 @@
 \description{Fast calculation of univariate association measures  in the
   semiparametric additive risk model, adjusted for user-specified covariates}
 \usage{
-ahaz.adjust(surv, X, weights, standardize=TRUE,
-            idx, method=c("coef", "z", "crit"))
+ahaz.adjust(surv, X, weights, idx, method=c("coef", "z", "crit"))
 }
 
 \arguments{
@@ -16,9 +15,6 @@ ahaz.adjust(surv, X, weights, standardize=TRUE,
   \item{X}{Design matrix. Missing values are not supported.}
   \item{weights}{Optional vector of observation weights. Default is 1
     for each observation.}
-    \item{standardize}{Logical flag for variable standardization, prior to
-    model fitting. Estimates are always returned on
-    the original scale. Default is \code{standardize=TRUE}.}
     \item{idx}{Vector specifying the indices of the covariates to adjust
       for.}
     \item{method}{The type of adjusted association measure to calculate. See details.}
@@ -29,7 +25,7 @@ ahaz.adjust(surv, X, weights, standardize=TRUE,
   \code{ahaz} is unfeasible.
   
   Running this function is equivalent to running \code{ahaz} with
-  design matrix \code{cbind(X[,i],X[,idx])} for each column \code{i} in
+  design matrix \code{cbind(X[,i],X[,idx])} for each column \code{X[,i]} in
   \code{X}. By utilizing basic matrix identities, \code{ahaz.adjust}
   runs many times faster.
   
@@ -65,11 +61,11 @@ surv <- Surv(time,sorlie$status)
 X <- as.matrix(sorlie[,3:ncol(sorlie)])
 
 # Adjust for first 10 covariates
-idx<-1:10
-a<-ahaz.adjust(surv,X,idx=idx)
+idx <- 1:10
+a <- ahaz.adjust(surv,X,idx=idx)
 
 # Compare with (slower) solution
-b<-apply(X[,-idx],2,function(x){summary(ahaz(surv,cbind(x,X[,idx])))$coef[1,3]})
+b <- apply(X[,-idx],2,function(x){coef(ahaz(surv,cbind(x,X[,idx])))[1]})
 plot(b,a$adj[-idx])
 }
 \keyword{models}

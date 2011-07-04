@@ -16,5 +16,3 @@
     cat("\n")
     invisible(x)
 }
-
- 

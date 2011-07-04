@@ -16,9 +16,9 @@
     type <- match.arg(type)
 
     if(!missing(newX)){
-      if(type!="lp")
+      if(type != "lp")
         stop("'newdata' only supported for 'type=\"lp\"'")
-      newdata<-as.matrix(newX)
+      newdata <- as.matrix(newX)
       if(!is.numeric(newX) || any(is.na(newX)) || ncol(newX)!=nrow(object$data$X))
         stop("wrong format of 'newdata'")
     }
@@ -30,16 +30,18 @@
          # OK if no collinearity, slow otherwise
           beta<-rep(NA,object$nvars)
           Dqr <- qr(object$D)
-          use<-Dqr$pivot[1:Dqr$rank]
-          if(Dqr$rank==object$nvars)
-            beta<-qr.solve(Dqr,object$d)
-          else
-            beta[use]<-solve(object$D[use,use],object$d[use])
+          use <- Dqr$pivot[1:Dqr$rank]
+          if(Dqr$rank == object$nvars) {
+            beta <- qr.solve(Dqr,object$d)
+          } else {
+            beta[use] <- solve(object$D[use,use],object$d[use])
+            names(beta) <- colnames(object$D)
+          }
       } else {
-        beta<-object$d / object$D
+        beta <- object$d / object$D
       }
     } else {
-      if(length(drop(beta))!=object$nvars)
+      if(length(drop(beta)) != object$nvars)
         stop("incorrect dimensions of 'beta'")
     }
     
@@ -47,14 +49,14 @@
         return(beta)
       } else if (type == "lp") {
         if(!missing(newX))
-          return(drop(newX%*%beta))
+          return(drop(newX %*% beta))
         if(object$nvars>1)
-          return(drop(beta%*%object$data$X[,order(object$data$ix)[1:object$nobs]]))
-        return(beta * object$data$X[order(object$data$ix)[1:object$nobs]])
+          return(drop(object$data$X%*%beta))
+        return(beta * object$data$X)
       } else {
         if(object$univar)
           stop("not supported for univariate regressions")
-        out <- ahaz.predbackend(object$data,beta,type,object$data$colnames)          
+        out <- ahaz.predbackend(ahaz.readold(object$data$surv, object$data$X, object$data$weights),beta,type,object$data$colnames)          
         return(out)
       }
   }
@@ -68,7 +70,7 @@
     ## ----------------------------------------------------------------------
     ## Author: Anders Gorst-Rasmussen
     
-    return(predict(object, type="coef"))
+    return(predict(object, type="coef",...))
 }
 
 "residuals.ahaz"<-function(object, ...)
@@ -80,7 +82,7 @@
     ## ----------------------------------------------------------------------
     ## Author: Anders Gorst-Rasmussen
     
-    return(predict(object, type="residuals"))
+    return(predict(object, type="residuals",...))
 }
 
 "vcov.ahaz"<-function(object, ...)
@@ -92,11 +94,11 @@
     ## ----------------------------------------------------------------------
     ## Author: Anders Gorst-Rasmussen
     if(object$univar==TRUE){
-      out<-diag(object$B/object$D^2 / object$data$weightsum)
+      out<-diag(object$B/object$D^2)
       colnames(out)<-rownames(out)<-names(object$D)
       return(out)
     } else {
       Dinv <- solve(object$D)
-      return((Dinv %*% object$B %*% Dinv) / object$data$weightsum)
+      return((Dinv %*% object$B %*% Dinv))
     }
   }

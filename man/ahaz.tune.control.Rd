@@ -9,7 +9,7 @@
 cv.control(nfolds=5, reps=1, foldid=NULL, trace=FALSE)
 
 # BIC-inspired
-bic.control(factor=function(nobs){ log(nobs) })
+bic.control(factor = function(nobs){log(nobs)})
 }
 \arguments{
   \item{nfolds}{Number of folds for cross-validation. Default is
@@ -43,8 +43,8 @@ bic.control(factor=function(nobs){ log(nobs) })
   Penalty parameter selection via a BIC-inspired approach was described by
    Gorst-Rasmussen & Scheike (2011). With \eqn{df} is the degrees of freedom and \eqn{n} the number of
   observations, we consider a BIC inspired criterion of the form
-  \deqn{BIC = \kappa L(\beta) + df\cdot factor(n)/n}{BIC = kappa * L(beta)
-   + df * factor(n) / n}
+  \deqn{BIC = \kappa L(\beta) + df\cdot factor(n)}{BIC = kappa * L(beta)
+   + df * factor(n) }
  where \eqn{\kappa}{kappa} is a scaling constant included to remove dependency on the
    time scale and better mimick the behavior of a `real' (likelihood) BIC. The default \code{factor=function(n){log(n)}} has
     desirable theoretical properties but may be conservative in practice.
@@ -59,15 +59,14 @@ bic.control(factor=function(nobs){ log(nobs) })
  \item{trace}{Print out progress?}
 }
 
-\references{
-Gorst-Rasmussen, A. & Scheike, T. H. (2011). \emph{Independent screening for
-  single-index hazard rate models with ultra-high dimensional features.}
-  Technical report, Department of Mathematical Sciences, Aalborg University.
+\references{ Gorst-Rasmussen, A. & Scheike,
+T. H. (2011). \emph{Independent screening for single-index hazard rate
+models with ultra-high dimensional features.}  Technical report
+R-2011-06, Department of Mathematical Sciences, Aalborg University.
 
-  Martinussen, T. & Scheike, T. H. (2008). \emph{Covariate selection
-  for the semiparametric additive risk model.} Scandinavian Journal of
-Statistics; \bold{36}:602-619.
-}
+  Martinussen, T. & Scheike, T. H. (2008). \emph{Covariate selection for
+  the semiparametric additive risk model.} Scandinavian Journal of
+Statistics; \bold{36}:602-619.  }
 \seealso{\code{\link{tune.ahazpen}}}
 
 \keyword{misc}

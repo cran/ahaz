@@ -1,5 +1,5 @@
 "print.tune.ahazpen"<-function(x, digits = max(3, getOption("digits") - 3), ...){
-    ## Purpose: Print 'ahazpencv' object
+    ## Purpose: Print 'tune.ahazpen' object
     ## ----------------------------------------------------------------------
     ## Arguments:
     ##   object: 'tune.ahazpen' object
@@ -15,9 +15,9 @@
   else
     cat("\n")
   } else {
-    cat("BIC-type penalty parameter selection \n")
+    cat("BIC-type penalty parameter selection \n\n")
   }
-  cat("Length of lambda sequence: ",format(length(x$lambda)),"\n")
-  cat("Optimal lambda: ",format(min(x$lambda.min), digits = digits),"\n")
-  cat("Nonzero parameters at optimal lambda: ",format(x$df[x$lambda==x$lambda.min][1], digits = digits),"\n\n")
+  cat("Length of lambda sequence : ",format(length(x$lambda)),"\n")
+  cat("Optimal lambda            : ",format(min(x$lambda.min), digits = digits),"\n")
+  cat("d.f. at optimal lambda    : ",format(x$df[x$lambda==x$lambda.min][1], digits = digits),"\n\n")
 }

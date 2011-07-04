@@ -3,7 +3,7 @@
 \title{Independent screening for the semiparametric
   additive hazards model}
 \description{Fast and scalable model selection for the semiparametric additive hazards
-  model via univariate screening combined with penalized regression methods.
+  model via univariate screening combined with penalized regression.
   }
 \usage{
 ahazisis(surv, X, weights, standardize=TRUE,
@@ -25,7 +25,7 @@ ahazisis(surv, X, weights, standardize=TRUE,
  \item{nsis}{Number of covariates to recruit initially. If
   \code{do.isis=TRUE}, then this is also the maximal number of variables
   that the algorithm will recruit.  Default is
-   \code{nsis=floor(nobs/log(nobs)/3)}}. 
+   \code{nsis=floor(nobs/log(nobs)/1.5)}}. 
    \item{do.isis}{Perform iterated independent screening?}
    \item{maxloop}{Maximal number of iterations of the algorithm if \code{do.isis=TRUE}.}
    \item{rank}{Method to use for (re)recruitment of variables. See details.}
@@ -51,10 +51,10 @@ ahazisis(surv, X, weights, standardize=TRUE,
      \item Recruits the \code{nsis} most relevant covariates by ranking them according to the univariate ranking
      method described by \code{rank}.
      \item Selects, using \code{ahazpen} with penalty function described
-  in\code{penalty}, a model among the
+  in \code{penalty}, a model among the
   top two thirds  of the \code{nsis} most relevant covariates. Call the
   size of this model \eqn{m}.
-     \item Recruits \code{nsis}\eqn{-m} new covariates among the non-selected
+     \item Recruits `\code{nsis} minus \eqn{m}' new covariates among the non-selected
   covariates by ranking their relevance according to the univariate
   ranking method described in \code{rank}, adjusted for the already
   selected variables (using an unpenalized semiparametric additive
@@ -69,7 +69,7 @@ The following choices of ranking method exist:
 \item { \code{rank="FAST"} corresponds to ranking, in the initial
   recruitment step only, by the basic FAST- statistic
 described in Gorst-Rasmussen & Scheike (2011). If \code{do.isis=TRUE}
-then the algorithm sets \code{rank="t"} for subsequent rankings.}
+then the algorithm sets \code{rank="z"} for subsequent rankings.}
 \item{ \code{rank="coef"} corresponds to ranking by absolute value of
 (univariate) regression coefficients, obtained via \code{ahaz} 
   }
@@ -85,9 +85,11 @@ the (univariate) natural loss function used for estimation by \code{ahaz}.
   An object with S3 class \code{"ahazisis"}.
   \item{call}{The call that produced this object.}
   \item{initRANKorder}{The initial ranking order.}
-  \item{detail.pickind}{List (of length at most \code{maxloop}) listing covariates
+  \item{detail.pickind}{List (of length at most \code{maxloop}) listing
+    the covariates
     selected in each recruitment step.}
-  \item{detail.ISISind}{List (of length at most \code{maxloop}) listing covariates
+  \item{detail.ISISind}{List (of length at most \code{maxloop}) listing
+    the covariates
     selected in each variable selection step.}
   \item{detail.ISIScoef}{List (of length at most \code{maxloop})
     listing the estimated penalized regression coefficients corresponding to
@@ -105,7 +107,7 @@ the (univariate) natural loss function used for estimation by \code{ahaz}.
 \references{
 Gorst-Rasmussen, A. & Scheike, T. H. (2011). \emph{Independent screening for
   single-index hazard rate models with ultra-high dimensional features.}
-  Technical report, Department of Mathematical Sciences, Aalborg University.
+  Technical report R-2011-06, Department of Mathematical Sciences, Aalborg University.
 }
 \seealso{\code{\link{print.ahazisis}}, \code{\link{ahazpen}}, \code{\link{ahaz.adjust}}}
 \examples{
@@ -120,14 +122,15 @@ surv <- Surv(time,sorlie$status)
 X <- as.matrix(sorlie[,3:ncol(sorlie)])
 
 # Basic ISIS/SIS with a single step
-m1<-ahazisis(surv,X,maxloop=1,rank="z")
+set.seed(10101)
+m1 <- ahazisis(surv,X,maxloop=1,rank="coef")
 m1
 # Indices of the variables from the initial recruitment step
 m1$SISind
 # Indices of selected variables
 m1$ISISind
 # Check fit
-score<-X[,m1$ISISind]\%*\%m1$ISIScoef
+score <- X[,m1$ISISind]\%*\%m1$ISIScoef
 plot(survfit(surv~I(score>median(score))))
 
 }

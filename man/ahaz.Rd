@@ -3,8 +3,7 @@
 \title{Fit semiparametric additive hazards model}
 \description{Fit a semiparametric additive hazards regression
   model. Right-censored and left-truncated survival data are supported.}
-\usage{ahaz(surv, X, weights, standardize=TRUE,
-            univariate=FALSE, robust=FALSE)  }
+\usage{ahaz(surv, X, weights, univariate=FALSE, robust=FALSE)  }
 
 \arguments{
   \item{surv}{Response in the form of a survival object, as returned by the
@@ -12,9 +11,6 @@
   and left-truncation is supported. Tied survival times are not supported.}
   \item{X}{Design matrix. Missing values are not supported.}
   \item{weights}{Optional vector of observation weights. Default is 1 for each observation.}
-  \item{standardize}{Logical flag for variable standardization, prior to
-    model fitting. Estimates are always returned on
-    the original scale. Default is \code{standardize = TRUE}.}
   \item{univariate}{Fit all univariate models instead of the joint
     model. Default is \code{univar =
       FALSE}.}
@@ -51,9 +47,9 @@
       TRUE}).}
   \item{d}{A vector of length \code{nvars}; the
   regression coefficients equal \code{solve(D,d)}.}
-  \item{B}{An \code{nvars x nvars} matrix which estimates the
-  covariance matrix of \code{d[idx]} (scaled by the number of
-  observations). If \code{robust=FALSE}
+  \item{B}{An \code{nvars x nvars} matrix such that \eqn{D^{-1} B
+  D^{-1}} estimates the
+  covariance matrix of the regression coefficients. If \code{robust=FALSE}
   then \code{B} is estimated using an asymptotic approximation; if
   \code{robust=TRUE} then \code{B} is estimated from residuals, see \code{\link[=residuals.ahaz]{residuals}}.}
 \item{univariate}{Is \code{univariate=TRUE}?}
