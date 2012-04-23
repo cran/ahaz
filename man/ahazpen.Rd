@@ -101,6 +101,10 @@ estimates at specific lambda values.
          \item{penalty}{A copy of \code{pmax}.}
 }
 \references{
+  Gorst-Rasmussen A., Scheike T. H. (2012). \emph{Coordinate Descent Methods
+  for the Penalized Semiparametric Additive Hazards Model}. Journal of
+  Statistical Software, \bold{47}(9):1-17. \url{http://www.jstatsoft.org/v47/i09/}
+	
 Gorst-Rasmussen, A. & Scheike, T. H. (2011). \emph{Independent screening for
   single-index hazard rate models with ultra-high dimensional features.}
   Technical report R-2011-06, Department of Mathematical Sciences, Aalborg University.

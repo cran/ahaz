@@ -1,4 +1,4 @@
-fcf9f922886dc9777d6482427e843903 *DESCRIPTION
+59d4ad328f97c113983cf6569f6ef341 *DESCRIPTION
 224890e5cb635ee0df520f4b39deb538 *NAMESPACE
 d62c9031ab2af713f132fe3c923294f9 *R/ahaz.R
 1610ec7a9297b35fbe2caf764ae47f4f *R/ahaz.adjust.R
@@ -23,12 +23,13 @@ c4e079b92f26171ad10408fa0c7f6a3e *R/print.tune.ahazpen.R
 ed64f6a131f7a617b8b3a16a0f1dc3b0 *R/summary.ahaz.R
 c27a0f13a9c25e65231f3845c4d02fd2 *R/tune.ahazpen.R
 691456862c14f30c67c029bd62bcc4b0 *data/sorlie.rda
+b58569f9e439f2ac8958814c9cf7e7e5 *inst/CITATION
 6596bfad4d04771f8bf46f66475d2151 *man/ahaz.Rd
 66163b65530bdecf7ba4bbe463a89b7e *man/ahaz.adjust.Rd
 78424fef3d73f2351df1e93387d81d50 *man/ahaz.partial.Rd
 e34c563ccb5b70305a04547dad7dc910 *man/ahaz.tune.control.Rd
 014b39f4046dd72c02935c49c44c6912 *man/ahazisis.Rd
-ad5a4c592023945ad1654fb9812e87a2 *man/ahazpen.Rd
+62a42be7945a28d1dd14d9b75edf13d1 *man/ahazpen.Rd
 57d0e0ad341779986f3043010c0e39bc *man/ahazpen.fit.control.Rd
 50a025c2b5c4ab860cf20e80647be05c *man/ahazpen.pen.control.Rd
 5762b82edefa9dfeb7bd0078c248e54a *man/plot.ahaz.Rd
