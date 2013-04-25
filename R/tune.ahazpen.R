@@ -19,7 +19,7 @@
     nobs<-nrow(X)
     
     if(!missing(lambda))
-      if(length(lambda)<2)
+      if(length(lambda) < 2)
         stop("'lambda' should have length > 1")
 
     tune<-eval(tune)

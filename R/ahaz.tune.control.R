@@ -31,11 +31,11 @@
           folds <- ahaz.cvfolds(nobs, nfolds)
               return(list("nfolds"=length(folds),"all.folds"=folds))
         } else {
-          if(!is.numeric(foldid) || length(foldid)!=nobs || sort(unique(foldid))!=1:max(foldid))
+          if(!is.numeric(foldid) || length(foldid) != nobs ||  length(unique(foldid)) != max(foldid) || sort(unique(foldid)) != 1:max(foldid))
             stop("invalid 'foldid'")
-          all.folds<-split(1:nobs,foldid)
-          nfolds<-length(folds)
-          if(lapply(all.folds,length)<=2)
+          folds <- split(1:nobs,foldid)
+          nfolds <- length(folds)
+          if(min(unlist(lapply(folds,length)))<=2)
             stop("too few observations in one or more folds")
           return(list("nfolds"=nfolds,"all.folds"=folds))
         }

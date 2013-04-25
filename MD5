@@ -1,9 +1,9 @@
-59d4ad328f97c113983cf6569f6ef341 *DESCRIPTION
+064bb3134dc7b4fa5acc19fd1cbde91a *DESCRIPTION
 224890e5cb635ee0df520f4b39deb538 *NAMESPACE
 d62c9031ab2af713f132fe3c923294f9 *R/ahaz.R
 1610ec7a9297b35fbe2caf764ae47f4f *R/ahaz.adjust.R
 c9c81a874609101621d3f1209a6d2e29 *R/ahaz.partial.R
-52c6050b464d90ee569959f403b3a565 *R/ahaz.tune.control.R
+2e6912da0ce9eeb47c5a74c348f5f2ea *R/ahaz.tune.control.R
 c17f755e9ed3c6cf7ce7218a11cc837d *R/ahazisis.R
 d712f0f242aad19ad052f08981b89836 *R/ahazpen.R
 dce1f2b9da597223f9814ddc3e0fea17 *R/ahazpen.fit.control.R
@@ -21,7 +21,7 @@ cb867ed7ade0cc7ae815e96834261485 *R/predict.ahazpen.R
 1433942904662d8accb6b0ef2522d690 *R/print.summary.ahaz.R
 c4e079b92f26171ad10408fa0c7f6a3e *R/print.tune.ahazpen.R
 ed64f6a131f7a617b8b3a16a0f1dc3b0 *R/summary.ahaz.R
-c27a0f13a9c25e65231f3845c4d02fd2 *R/tune.ahazpen.R
+b52aab8165f437a558ffc9ff59b4c011 *R/tune.ahazpen.R
 691456862c14f30c67c029bd62bcc4b0 *data/sorlie.rda
 b58569f9e439f2ac8958814c9cf7e7e5 *inst/CITATION
 6596bfad4d04771f8bf46f66475d2151 *man/ahaz.Rd
