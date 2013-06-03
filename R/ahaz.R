@@ -19,7 +19,7 @@
     tmp<-ahaz.readnew(surv,X,weights)
 
     a <- .C("aha",
-            "X"=tmp$X,
+            "X"=as.numeric(tmp$X),
             "time1"=as.double(tmp$time1),
             "time2"=as.double(tmp$time2),
             "event"=as.integer(tmp$event),
