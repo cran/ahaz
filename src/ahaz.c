@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+
+#define USE_FC_LEN_T
 #include <R_ext/BLAS.h>
 #include <R.h>
 
@@ -9,14 +11,20 @@
 // ########
 // # BLAS # 
 // ########
-extern double F77_SUB(ddot)(const int *n, const double *dx, const int *incx,
+extern double F77_NAME(ddot)(const int *n, const double *dx, const int *incx,
 			    const double *dy, const int *incy);
 
-extern void F77_SUB(dgemv)(const char *trans, const int *m, const int *n,
+#ifdef FC_LEN_T
+extern void F77_NAME(dgemv)(const char *trans, const int *m, const int *n,
+			   const double *alpha, const double *a, const int *lda,
+			   const double *x, const int *incx, const double *beta,
+                           double *y, const int *incy, size_t);
+#else
+extern void F77_NAME(dgemv)(const char *trans, const int *m, const int *n,
 			   const double *alpha, const double *a, const int *lda,
 			   const double *x, const int *incx, const double *beta,
 			   double *y, const int *incy);
-
+#endif
 
 double dot(int n,const double * x,const double * y)
 {
@@ -40,7 +48,11 @@ void matvecmul_blas(const double * M, const double *v1, double *v2, int n, int p
   int nrow = n;
   int ncol = p;
 
+#ifdef FC_LEN_T
+  F77_CALL(dgemv)(&trans, &nrow, &ncol, &alpha, M, &nrow, v1, &incx, &beta, v2, &incy, 1);
+#else
   F77_CALL(dgemv)(&trans, &nrow, &ncol, &alpha, M, &nrow, v1, &incx, &beta, v2, &incy);
+#endif
   }
 			  
 static inline void matvecmul_nonblas(double ** M, double * v1, double *v2, int n, int p, char trans) 

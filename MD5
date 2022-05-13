@@ -1,5 +1,5 @@
-2bb949909521c66ebc9e24472a233d1f *DESCRIPTION
-224890e5cb635ee0df520f4b39deb538 *NAMESPACE
+84c47d43d2d4552b8475e17639fb9075 *DESCRIPTION
+21387d4218a1724a25002b8390247479 *NAMESPACE
 14636f05d05dd2aaf2012bcffb225714 *R/ahaz.R
 1610ec7a9297b35fbe2caf764ae47f4f *R/ahaz.adjust.R
 c9c81a874609101621d3f1209a6d2e29 *R/ahaz.partial.R
@@ -8,7 +8,7 @@ c17f755e9ed3c6cf7ce7218a11cc837d *R/ahazisis.R
 d712f0f242aad19ad052f08981b89836 *R/ahazpen.R
 dce1f2b9da597223f9814ddc3e0fea17 *R/ahazpen.fit.control.R
 5990ce8cdcedbcbe21168be3827a367d *R/ahazpen.pen.control.R
-237ddd073d52a04a199003345b17a7a4 *R/helpers.R
+aa86d48cbc3a327ef1dfa5e9bb7eee6f *R/helpers.R
 de650e89e635b25c014881a3092f7f42 *R/plot.ahaz.R
 fb657eef214a6e8fb69db41f53de2e34 *R/plot.ahazpen.R
 85296ba80667c79e8fd7b7656e634054 *R/plot.cumahaz.R
@@ -23,13 +23,13 @@ c4e079b92f26171ad10408fa0c7f6a3e *R/print.tune.ahazpen.R
 ed64f6a131f7a617b8b3a16a0f1dc3b0 *R/summary.ahaz.R
 b52aab8165f437a558ffc9ff59b4c011 *R/tune.ahazpen.R
 691456862c14f30c67c029bd62bcc4b0 *data/sorlie.rda
-b58569f9e439f2ac8958814c9cf7e7e5 *inst/CITATION
+5da0f49871d883876871b7415a706568 *inst/CITATION
 6596bfad4d04771f8bf46f66475d2151 *man/ahaz.Rd
 66163b65530bdecf7ba4bbe463a89b7e *man/ahaz.adjust.Rd
 78424fef3d73f2351df1e93387d81d50 *man/ahaz.partial.Rd
 e34c563ccb5b70305a04547dad7dc910 *man/ahaz.tune.control.Rd
 014b39f4046dd72c02935c49c44c6912 *man/ahazisis.Rd
-62a42be7945a28d1dd14d9b75edf13d1 *man/ahazpen.Rd
+c381d50ab4fe7aeccb9918a42095e1da *man/ahazpen.Rd
 57d0e0ad341779986f3043010c0e39bc *man/ahazpen.fit.control.Rd
 50a025c2b5c4ab860cf20e80647be05c *man/ahazpen.pen.control.Rd
 5762b82edefa9dfeb7bd0078c248e54a *man/plot.ahaz.Rd
@@ -47,4 +47,4 @@ ffb4d676f2cb22089eaff9b67e467c98 *man/plot.tune.ahazpen.Rd
 30b6486d6f25b779df5382980b1d3911 *man/summary.ahaz.Rd
 e49f1b67617cdfc0276e383fb05bfe7b *man/tune.ahazpen.Rd
 7736ff91d0cb6e5ece5ddf86cea27065 *src/Makevars
-7a19248890754d34760cbf66e9541fa2 *src/ahaz.c
+0df7f355e91a367ab5552fd4395887ab *src/ahaz.c

@@ -24,3 +24,9 @@ S3method("print","tune.ahazpen")
 S3method("predict","tune.ahazpen")
 S3method("coef","tune.ahazpen")
 S3method("plot","cumahaz")
+
+importFrom("graphics", "abline", "axis", "matplot", "mtext",
+           "segments")
+importFrom("methods", "new")
+importFrom("stats", "approx", "coef", "pchisq", "pnorm", "predict",
+           "printCoefmat", "sd", "stepfun")

@@ -12,7 +12,7 @@
     
     # Validity checks/coercions
     X<-as.matrix(X)
-    if (!class(surv) == "Surv") stop("First argument must be a Surv object")
+	if (!inherits(surv,"Surv")) stop("First argument must be a Surv object")
     if (!is.numeric(X)) stop("X must be a numeric matrix")
     if (nrow(surv) != nrow(X)) stop("Survival times/covariates have incorrect dimensions")
     if (nrow(surv) < 2) stop("too few observations")
@@ -100,7 +100,7 @@
     
     # Validity checks/coercions
     X<-as.matrix(X)
-    if (!class(surv) == "Surv") stop("First argument must be a Surv object")
+    if (!inherits(surv,"Surv")) stop("First argument must be a Surv object")
     if (!is.numeric(X)) stop("X must be a numeric matrix")
     if (nrow(surv) != nrow(X)) stop("Survival times/covariates have incorrect dimensions")
     if (nrow(surv) < 2) stop("too few observations")
