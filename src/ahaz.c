@@ -185,7 +185,7 @@ void scale (double *X, const double *weights, int n, int p,double *mn,
   double tmp;
   double invsd;
   double sum = 0;
-  double * wgt = Calloc(nobs,double);
+  double * wgt = R_Calloc(nobs,double);
 
   for(int i=0;i<nobs;i++) sum += weights[i];
   for(int i=0;i<nobs;i++) wgt[i] = weights[i]/sum;
@@ -268,7 +268,7 @@ void formatsurvdat(double *time1,double *time2, int *event, double *weights,
   if (rightcens) {
     for (int i = 0; i < n; i++) sum += weights[i];
 
-    int * ix = Calloc(n,int);
+    int * ix = R_Calloc(n,int);
     for(int i = 0; i < n; i++) ix[i] = i;
     
     sortix(time2,ix,n);
@@ -286,16 +286,16 @@ void formatsurvdat(double *time1,double *time2, int *event, double *weights,
 	s[i].iatrisk = s[i].atrisk ? 1.0/s[i].atrisk : 0;
 	s[i].tatrisk = time2[i];
       }
-    Free(ix);
+    R_Free(ix);
   } else {
       int nOrig = n / 2;
       for(int i=0;i<nOrig;i++) sum += weights[i];
 
-      int * ix = Calloc(n,int);
-      double * tmpTimes = Calloc(n,double);
-      int * tmpDeathyn = Calloc(n,int);
-      double * tmpInout = Calloc(n,double);
-      double * tmpTdiff = Calloc(n,double);
+      int * ix = R_Calloc(n,int);
+      double * tmpTimes = R_Calloc(n,double);
+      int * tmpDeathyn = R_Calloc(n,int);
+      double * tmpInout = R_Calloc(n,double);
+      double * tmpTdiff = R_Calloc(n,double);
 
       for (int i = 0; i < nOrig; i++) {
 	  tmpTimes[i] = time1[i];
@@ -326,8 +326,8 @@ void formatsurvdat(double *time1,double *time2, int *event, double *weights,
 	  s[i].tatrisk = tmpTdiff[ix[i]]; 
 	}
 
-      Free(ix); Free(tmpDeathyn); Free(tmpInout);  Free(tmpTdiff);
-      Free(tmpTimes); 
+      R_Free(ix); R_Free(tmpDeathyn); R_Free(tmpInout);  R_Free(tmpTdiff);
+      R_Free(tmpTimes); 
       }
 }
 
@@ -369,21 +369,21 @@ void aha (double * X, double *time1, double *time2, int *event,
   s = malloc(nobs*sizeof(*s));
 
   // Do scaling (we must ALWAYS center variables!)
-  double * mn = Calloc(npar,double);
-  double * iSd = Calloc(npar,double);
+  double * mn = R_Calloc(npar,double);
+  double * iSd = R_Calloc(npar,double);
   scale(X,weights,nobs,npar,mn,iSd,0);
 
   // Format survival data
   formatsurvdat(time1,time2,event,weights,s,nobs,*rightcens);
 
   // Containers for n-vectors for D/B calculations
-  double * dotD = Calloc(nobs,double);
-  double * dotDunso = Calloc(nobs,double);
-  double * dotB = Calloc(nobs,double);
-  double * dotBunso = Calloc(nobs,double);
+  double * dotD = R_Calloc(nobs,double);
+  double * dotDunso = R_Calloc(nobs,double);
+  double * dotB = R_Calloc(nobs,double);
+  double * dotBunso = R_Calloc(nobs,double);
   
   // Container for sorted row of X
-  double * XjSo = Calloc(nobs,double);
+  double * XjSo = R_Calloc(nobs,double);
 
   // Univariate requested?
   int P = *univariate ? 0 : npar;
@@ -447,8 +447,8 @@ void aha (double * X, double *time1, double *time2, int *event,
     } 
   }
 
-  Free(dotD); Free(dotDunso); Free(XjSo);
-  Free(dotB); Free(dotBunso); Free(iSd); Free(mn);
+  R_Free(dotD); R_Free(dotDunso); R_Free(XjSo);
+  R_Free(dotB); R_Free(dotBunso); R_Free(iSd); R_Free(mn);
   free(s);
 }
 
@@ -544,12 +544,12 @@ void ahapen(double * X, double *time1, double *time2, int *event,
   formatsurvdat(time1,time2,event,weights,s,nobs,*rightcens);
  
   // Do scaling (we *must* center for our formulas to work!)
-  double * mn = Calloc(npar,double);
-  double * iSd = Calloc(npar,double);
+  double * mn = R_Calloc(npar,double);
+  double * iSd = R_Calloc(npar,double);
   scale(X,weights,nobs,npar,mn,iSd,*standardize);
 
   // Calculate d and find lambda_max
-  double * d = Calloc(npar,double);
+  double * d = R_Calloc(npar,double);
   for (int j = 0; j < npar; j++) {
     double covsum = 0;
     for (int i = 0; i < nobs; i++) {
@@ -570,19 +570,19 @@ void ahapen(double * X, double *time1, double *time2, int *event,
   double *lambda;
   if (*lambdaminf < 1.0) {
     nlambda = *nlam;
-    lambda = Calloc(nlambda,double);
+    lambda = R_Calloc(nlambda,double);
     for (int l = 0; l < nlambda ; l++) {
       lambda[l] = maxlam * pow(*lambdaminf, l / (nlambda - 1.0));
       lam[l] = lambda[l];
     }
   }
   else { // If user-specified lambda, force cold start (10 extra lambda values - better than nothing)
-    int *ix = Calloc(*nlam,int);
+    int *ix = R_Calloc(*nlam,int);
     sortix(lam,ix,*nlam);
-    Free(ix);
+    R_Free(ix);
     extralam = lam[0] < maxlam ? 10 : 0;
     nlambda = *nlam+extralam;
-    lambda = Calloc(nlambda,double);
+    lambda = R_Calloc(nlambda,double);
     
     for (int l = 0; l < nlambda; l++) {
       if(l < extralam){
@@ -595,23 +595,23 @@ void ahapen(double * X, double *time1, double *time2, int *event,
   }
     
   // ......CCD PART STARTS HERE......
-  double * coefActive = Calloc(npar, double);    // Estimates in active set  
-  int * inStrong = Calloc(npar,int);             // Index of feature in strong set (if applicable)
-  int * jaTOjc = Calloc(npar,int);               // Active variable index -> complete index
-  int * jsTOjc = Calloc(npar,int);               // Strong variable index -> complete index
-  int *  inActive =  Calloc(npar,int);           // Logical: is variable in active set?
-  int *  isNew =  Calloc(npar,int);              // Logical: is variable new in active set?
-  double *  residual = Calloc(nobs,double);      // Residual vector
-  double **  D = Calloc(*pmax, double*);         // 'Covariance' matrix
-  double * z = Calloc(nobs, double);             // Used for (re)calculating D
-  double * riskSc = Calloc(nobs,double);         // Container for risk scores
-  double * rs = Calloc(nobs,double);             // For summing p-vectors
-  double * res = Calloc(npar,double);            // For summing p-vectors
-  double * zz = Calloc(nobs,double);             // For summing p-vectors
-  double ** XX = Calloc(*pmax,double*);     // Container for copy of X for active vars
+  double * coefActive = R_Calloc(npar, double);    // Estimates in active set  
+  int * inStrong = R_Calloc(npar,int);             // Index of feature in strong set (if applicable)
+  int * jaTOjc = R_Calloc(npar,int);               // Active variable index -> complete index
+  int * jsTOjc = R_Calloc(npar,int);               // Strong variable index -> complete index
+  int *  inActive =  R_Calloc(npar,int);           // Logical: is variable in active set?
+  int *  isNew =  R_Calloc(npar,int);              // Logical: is variable new in active set?
+  double *  residual = R_Calloc(nobs,double);      // Residual vector
+  double **  D = R_Calloc(*pmax, double*);         // 'Covariance' matrix
+  double * z = R_Calloc(nobs, double);             // Used for (re)calculating D
+  double * riskSc = R_Calloc(nobs,double);         // Container for risk scores
+  double * rs = R_Calloc(nobs,double);             // For summing p-vectors
+  double * res = R_Calloc(npar,double);            // For summing p-vectors
+  double * zz = R_Calloc(nobs,double);             // For summing p-vectors
+  double ** XX = R_Calloc(*pmax,double*);     // Container for copy of X for active vars
 
-  double * pna = Calloc(npar,double);     // Container for copy of X for active vars
-  double * pnb = Calloc(npar,double);     // Container for copy of X for active vars
+  double * pna = R_Calloc(npar,double);     // Container for copy of X for active vars
+  double * pnb = R_Calloc(npar,double);     // Container for copy of X for active vars
 
   int violStrongKKT, violAllKKT;
   double maxdiff, oldLossFun;
@@ -701,7 +701,7 @@ void ahapen(double * X, double *time1, double *time2, int *event,
 		      }   
 
 		      // Add new row
-		      D[noActive] = Calloc(*pmax, double); 
+		      D[noActive] = R_Calloc(*pmax, double); 
 		      double newv = 0; double covsum = 0;
 		      for (int i = 0; i < nobs; i++)
 			{
@@ -711,7 +711,7 @@ void ahapen(double * X, double *time1, double *time2, int *event,
 			}
 
 		      // Copy 'active covariates'
-		      XX[noActive]=Calloc(nobs,double);
+		      XX[noActive]=R_Calloc(nobs,double);
 		      for (int i = 0; i < nobs; i++) {
 			XX[noActive][i]=X[nobs * jc+s[i].ixso];
 		      }
@@ -790,16 +790,16 @@ void ahapen(double * X, double *time1, double *time2, int *event,
   
   
   for (int j = 0; j < noActive; j++) {
-    Free(D[j]);
-    Free(XX[j]);
+    R_Free(D[j]);
+    R_Free(XX[j]);
   }
-  Free(D);
-  Free(XX);
+  R_Free(D);
+  R_Free(XX);
   
-  Free(coefActive); Free(inStrong); Free(jaTOjc); Free(jsTOjc);
-  Free(inActive); Free(isNew); Free(residual); Free(z); Free(riskSc);
-  Free(rs); Free(res); Free(zz); Free(d); 
-  Free(lambda); Free(mn); Free(iSd); Free(pna);Free(pnb);
+  R_Free(coefActive); R_Free(inStrong); R_Free(jaTOjc); R_Free(jsTOjc);
+  R_Free(inActive); R_Free(isNew); R_Free(residual); R_Free(z); R_Free(riskSc);
+  R_Free(rs); R_Free(res); R_Free(zz); R_Free(d); 
+  R_Free(lambda); R_Free(mn); R_Free(iSd); R_Free(pna);R_Free(pnb);
   
   free(s);    
 }
@@ -860,7 +860,7 @@ void ahbreslow  (double *X, double *tdiff,double *inout,double *iatrisk, int *de
   // Author: Anders Gorst-Rasmussen
 
   double *covsum;
-  covsum= Calloc(*p,double);
+  covsum= R_Calloc(*p,double);
  
   for(int i = 0; i < *n; i++)
     {
@@ -874,5 +874,5 @@ void ahbreslow  (double *X, double *tdiff,double *inout,double *iatrisk, int *de
 	  bresl[i] -= zbar[i * (*p)+k] * tdiff[i] * beta[k];
 	}     
     }  
-  Free(covsum);
+  R_Free(covsum);
 }
